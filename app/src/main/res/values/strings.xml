@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">界址圖片上傳(測試版)</string>
+
+    <string-array name="office">
+        <item>中山</item>
+        <item>中正</item>
+        <item>中興</item>
+        <item>豐原</item>
+        <item>大甲</item>
+        <item>清水</item>
+        <item>東勢</item>
+        <item>雅潭</item>
+        <item>大里</item>
+        <item>太平</item>
+        <item>龍井</item>
+    </string-array>
+
+</resources>
