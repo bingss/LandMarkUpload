@@ -3,6 +3,7 @@ package com.example.LandMarkUpload;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -17,10 +19,13 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.Manifest;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -28,6 +33,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.time.Year;
+import java.util.Calendar;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -52,18 +59,33 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-            if (!Environment.isExternalStorageManager()){
-                Toast toast = Toast.makeText( MainActivity.this, "請開啟存取檔案權限", Toast.LENGTH_SHORT);
-                toast.show();
-                startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
+        boolean isReadMediaPermission = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            String[] permissions;
+            if (!isReadMediaPermission) {//如果只有存取權限未取得
+//                permissions = new String[1];
+//                permissions[0] = Manifest.permission.READ_EXTERNAL_STORAGE;
+//                requestPermissions(permissions, 100);
+                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},100);
             }
         }
+
+//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+//            if (!Environment.isExternalStorageManager()){
+//                Toast toast = Toast.makeText( MainActivity.this, "請開啟存取檔案權限", Toast.LENGTH_SHORT);
+//                toast.show();
+//                startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
+//            }
+//        }
 
         btnSearch = findViewById(R.id.btnSearch);
         edtYear = findViewById(R.id.edtYear);
         edtNum = findViewById(R.id.edtNum);
         progressBar = findViewById(R.id.progressBar);
+
+        //設定初始年度
+        edtYear.setText( String.valueOf(Calendar.getInstance().get(Calendar.YEAR)-1911) );
 
         //地所選單
         spnOffice = findViewById(R.id.spnOffice);
@@ -131,10 +153,22 @@ public class MainActivity extends AppCompatActivity {
                 getHttpData(Year, Num.toString() ,OfficeCode);
             }
         });
-
-
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.d("PhotoPicker", "取得權限判斷:" + grantResults);
+        if (grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            btnSearch.setEnabled(true);
+        }
+        else {
+            Toast toast = Toast.makeText( MainActivity.this, "請開啟圖片存取權限", Toast.LENGTH_SHORT);
+            toast.show();
+            btnSearch.setEnabled(false);
+        }
     }
 
+    //取得案件資料:get請求
     public void getHttpData(String Year,String Num,String OfficeCode) {
 
         OkHttpClient okHttpClient = new OkHttpClient();
@@ -167,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //response資料結果處理
     private Handler mHandler = new Handler(Looper.myLooper()){
         @Override
         public void handleMessage(@NonNull Message msg) {

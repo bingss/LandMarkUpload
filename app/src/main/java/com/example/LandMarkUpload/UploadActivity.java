@@ -50,6 +50,56 @@ public class UploadActivity extends AppCompatActivity {
     private String uploadApi;
     private ProgressBar progressBar;
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_upload_pic);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        progressBar = findViewById(R.id.progressBar);
+        TextView textName = findViewById(R.id.textName);
+        TextView textReason = findViewById(R.id.textReason);
+        TextView textLocation = findViewById(R.id.textLocation);
+        TextView textLand = findViewById(R.id.textLand);
+        TextView textSurvey = findViewById(R.id.textSurvey);
+
+        Intent intent = getIntent();
+        textName.setText( intent.getStringExtra("caseName") );
+        textReason.setText( intent.getStringExtra("caseReason") );
+        textLocation.setText( intent.getStringExtra("caseLocation") );
+        textLand.setText( intent.getStringExtra("caseLand") );
+        textSurvey.setText( intent.getStringExtra("caseSurvey") );
+
+        uploadApi = "https://lohas.taichung.gov.tw/SurveyFile/Upload.aspx?folder=AllFile/"+textLocation.getText()
+                +"&keyword="+textName.getText()+"_"+textLocation.getText()+textLand.getText()
+                +"&fname="+textName.getText()+"_"+textLocation.getText()+textLand.getText();
+
+        btnChoose = findViewById(R.id.btnChoose);
+        btnBack = findViewById(R.id.btnBack);
+
+        btnChoose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(v.VISIBLE);
+                btnChoose.setEnabled(false);
+                pickMultipleMedia.launch(new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo.INSTANCE)
+                        .build());
+            }
+        });
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+    }
+
     private ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia =
             registerForActivityResult(new ActivityResultContracts.PickMultipleVisualMedia(50), uris -> {
                 // Callback is invoked after the user selects media items or closes the
@@ -61,6 +111,7 @@ public class UploadActivity extends AppCompatActivity {
 
                     uris.forEach((uri) -> {
                         String imgPath = getRealPathFromURI(this,uri);
+
 
                         File compressedFile = new File(this.getFilesDir().getPath() + "/" + nowDate + "_" +uris.indexOf(uri)+".jpg");
                         try {
@@ -153,56 +204,6 @@ public class UploadActivity extends AppCompatActivity {
             }
         });
 
-    }
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_upload_pic);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        progressBar = findViewById(R.id.progressBar);
-        TextView textName = findViewById(R.id.textName);
-        TextView textReason = findViewById(R.id.textReason);
-        TextView textLocation = findViewById(R.id.textLocation);
-        TextView textLand = findViewById(R.id.textLand);
-        TextView textSurvey = findViewById(R.id.textSurvey);
-
-        Intent intent = getIntent();
-        textName.setText( intent.getStringExtra("caseName") );
-        textReason.setText( intent.getStringExtra("caseReason") );
-        textLocation.setText( intent.getStringExtra("caseLocation") );
-        textLand.setText( intent.getStringExtra("caseLand") );
-        textSurvey.setText( intent.getStringExtra("caseSurvey") );
-
-        uploadApi = "https://lohas.taichung.gov.tw/SurveyFile/Upload.aspx?folder=AllFile/"+textLocation.getText()
-                +"&keyword="+textName.getText()+"_"+textLocation.getText()+textLand.getText()
-                +"&fname="+textName.getText()+"_"+textLocation.getText()+textLand.getText();
-
-        btnChoose = findViewById(R.id.btnChoose);
-        btnBack = findViewById(R.id.btnBack);
-
-
-        btnChoose.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressBar.setVisibility(v.VISIBLE);
-                btnChoose.setEnabled(false);
-                pickMultipleMedia.launch(new PickVisualMediaRequest.Builder()
-                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo.INSTANCE)
-                        .build());
-            }
-        });
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
     }
 
 
