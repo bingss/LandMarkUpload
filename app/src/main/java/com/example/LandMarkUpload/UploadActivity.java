@@ -4,6 +4,7 @@ import static com.example.LandMarkUpload.FileHelper.getRealPathFromURI;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -99,15 +100,16 @@ public class UploadActivity extends AppCompatActivity {
                 // photo picker.
                 if (uris != null && !uris.isEmpty()) {
                     String zipPath = this.getFilesDir().getPath() + "/LP_1.zip";
-                    List<File> imgFiles = new ArrayList<>();
                     String nowDate = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(new Date());
+                    try {
+                        FileOutputStream fos = new FileOutputStream(zipPath);
+                        ZipOutputStream zop = new ZipOutputStream(fos);
+                        byte[] bytes = new byte[1024*8];
 
-                    uris.forEach((uri) -> {
-                        String imgPath = getRealPathFromURI(this,uri);
+                        for(Uri uri:uris){
+                            String imgPath = getRealPathFromURI(this,uri);
+                            File compressedFile = new File(this.getFilesDir().getPath() + "/" + nowDate + "_" +uris.indexOf(uri)+".jpg");
 
-
-                        File compressedFile = new File(this.getFilesDir().getPath() + "/" + nowDate + "_" +uris.indexOf(uri)+".jpg");
-                        try {
                             //圖片壓縮
                             BitmapFactory.Options options = new BitmapFactory.Options();
                             options.inSampleSize = 2;       // 採樣率
@@ -115,53 +117,37 @@ public class UploadActivity extends AppCompatActivity {
                             Bitmap bitmap = BitmapFactory.decodeFile(imgPath, options);
                             BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream( compressedFile ));
                             bitmap.compress(Bitmap.CompressFormat.JPEG,100,bos);
-                            imgFiles.add( compressedFile );
                             bos.close();
-                        }catch (Exception e) {
-                            Toast toast = Toast.makeText( UploadActivity.this, "圖片壓縮失敗", Toast.LENGTH_SHORT);
-                            toast.show();
-                            progressBar.setVisibility(View.GONE);
-                            btnChoose.setEnabled(true);
-                            Log.d("PhotoPicker", "圖片壓縮失敗:" + e);
-                        }
-                    });
 
-                    try {
-                        FileOutputStream fos = new FileOutputStream(zipPath);
-                        ZipOutputStream zop = new ZipOutputStream(fos);
-                        byte[] bytes = new byte[1024*8];
-
-                        for (File imgFile : imgFiles) {
-                            Log.d("PhotoPicker", imgFile.getPath());
-                            BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(imgFile));
-                            zop.putNextEntry(new ZipEntry(imgFile.getName()));
+                            BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(compressedFile));
+                            zop.putNextEntry(new ZipEntry(compressedFile.getName()));
                             int length;
                             while ((length = bufferedInputStream.read(bytes)) > 0) {
                                 zop.write(bytes, 0, length);
                             }
                             zop.closeEntry();
                             bufferedInputStream.close();
+                            boolean deleted = compressedFile.delete();
                         }
                         zop.close();
                         fos.close();
-                        for (File imgFile : imgFiles) {
-                            boolean deleted = imgFile.delete();
-                        }
                         postZipData(zipPath);
                         Toast toast = Toast.makeText( UploadActivity.this, "上傳成功", Toast.LENGTH_SHORT);
                         toast.show();
-                        Log.d("PhotoPicker", "上傳完成:"+ zipPath);
                         finish();
-                    } catch (Exception e) {
-                        Log.d("PhotoPicker", "上傳失敗:" + e);
+                    }catch (Exception e) {
+                        Toast toast = Toast.makeText( UploadActivity.this, "圖片壓縮失敗", Toast.LENGTH_SHORT);
+                        toast.show();
                     }finally {
                         progressBar.setVisibility(View.GONE);
                         btnChoose.setEnabled(true);
                     }
-
                 }
                 else {
-                    Log.d("PhotoPicker", "未選取照片");
+                    Toast toast = Toast.makeText( UploadActivity.this, "未選取照片", Toast.LENGTH_SHORT);
+                    toast.show();
+                    progressBar.setVisibility(View.GONE);
+                    btnChoose.setEnabled(true);
                 }
             });
     private void postZipData(String zipPath) {
@@ -187,7 +173,6 @@ public class UploadActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) {
                 // 連線成功
                 boolean deleted = zipFile.delete();
-                Log.d("OkHttp", "傳送成功" + deleted);
             }
             @Override
             public void onFailure(Call call, IOException e) {
