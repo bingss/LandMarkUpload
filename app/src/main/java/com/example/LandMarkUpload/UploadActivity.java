@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -82,32 +83,24 @@ public class UploadActivity extends AppCompatActivity {
         btnChoose = findViewById(R.id.btnChoose);
         btnBack = findViewById(R.id.btnBack);
 
-        btnChoose.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressBar.setVisibility(v.VISIBLE);
-                btnChoose.setEnabled(false);
-                pickMultipleMedia.launch(new PickVisualMediaRequest.Builder()
-                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageAndVideo.INSTANCE)
-                        .build());
-            }
+        btnChoose.setOnClickListener(v -> {
+            progressBar.setVisibility(v.VISIBLE);
+            btnChoose.setEnabled(false);
+            pickMultipleMedia.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    .build());
         });
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        btnBack.setOnClickListener(v -> finish());
     }
 
-    private ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia =
+    private final ActivityResultLauncher<PickVisualMediaRequest> pickMultipleMedia =
             registerForActivityResult(new ActivityResultContracts.PickMultipleVisualMedia(50), uris -> {
                 // Callback is invoked after the user selects media items or closes the
                 // photo picker.
                 if (uris != null && !uris.isEmpty()) {
                     String zipPath = this.getFilesDir().getPath() + "/LP_1.zip";
-                    List<File> imgFiles = new ArrayList<File>();
-                    String nowDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+                    List<File> imgFiles = new ArrayList<>();
+                    String nowDate = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(new Date());
 
                     uris.forEach((uri) -> {
                         String imgPath = getRealPathFromURI(this,uri);
@@ -136,14 +129,13 @@ public class UploadActivity extends AppCompatActivity {
                     try {
                         FileOutputStream fos = new FileOutputStream(zipPath);
                         ZipOutputStream zop = new ZipOutputStream(fos);
-                        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(zop);
                         byte[] bytes = new byte[1024*8];
 
                         for (File imgFile : imgFiles) {
                             Log.d("PhotoPicker", imgFile.getPath());
                             BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(imgFile));
                             zop.putNextEntry(new ZipEntry(imgFile.getName()));
-                            int length = 0;
+                            int length;
                             while ((length = bufferedInputStream.read(bytes)) > 0) {
                                 zop.write(bytes, 0, length);
                             }
@@ -192,7 +184,7 @@ public class UploadActivity extends AppCompatActivity {
         // 執行Call連線到網址
         call.enqueue(new Callback() {
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Call call, Response response) {
                 // 連線成功
                 boolean deleted = zipFile.delete();
                 Log.d("OkHttp", "傳送成功" + deleted);

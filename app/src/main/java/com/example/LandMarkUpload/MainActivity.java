@@ -6,13 +6,11 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,7 +20,6 @@ import android.widget.Toast;
 import android.Manifest;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -33,7 +30,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.time.Year;
 import java.util.Calendar;
 
 import okhttp3.Call;
@@ -59,14 +55,15 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        boolean isReadMediaPermission = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            String[] permissions;
-            if (!isReadMediaPermission) {//如果只有存取權限未取得
-//                permissions = new String[1];
-//                permissions[0] = Manifest.permission.READ_EXTERNAL_STORAGE;
-//                requestPermissions(permissions, 100);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { //sdk 33以上
+            if (checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_MEDIA_IMAGES},100);
+            }
+        }
+        else{ //sdk 32以下
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},100);
             }
         }
@@ -99,65 +96,64 @@ public class MainActivity extends AppCompatActivity {
         spnOffice.setAdapter(adapter);
         spnOffice.setSelection( Integer.parseInt(curOffice) );
 
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                progressBar.setVisibility(v.VISIBLE);
-                btnSearch.setEnabled(false);
+        btnSearch.setOnClickListener( v -> {
+            progressBar.setVisibility(v.VISIBLE);
+            btnSearch.setEnabled(false);
 
-                //存現在選擇地所Position
-                SharedPreferences sharedPreferences= getSharedPreferences("Data", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("Office", String.valueOf(spnOffice.getSelectedItemPosition()));
-                editor.apply();
+            //存現在選擇地所Position
+            SharedPreferences sharedPreferences1 = getSharedPreferences("Data", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences1.edit();
+            editor.putString("Office", String.valueOf(spnOffice.getSelectedItemPosition()));
+            editor.apply();
 
-                String OfficeCode;
-                switch(spnOffice.getSelectedItemPosition()) {
-                    case 0: //中山
-                        OfficeCode = "BA";
-                        break;
-                    case 1: //中正
-                        OfficeCode = "BB";
-                        break;
-                    case 2: //中興
-                        OfficeCode = "BC";
-                        break;
-                    case 3: //豐原
-                        OfficeCode = "BD";
-                        break;
-                    case 4: //大甲
-                        OfficeCode = "BE";
-                        break;
-                    case 5: //清水
-                        OfficeCode = "BF";
-                        break;
-                    case 6: //東勢
-                        OfficeCode = "BG";
-                        break;
-                    case 7: //雅潭
-                        OfficeCode = "BH";
-                        break;
-                    case 8: //大里
-                        OfficeCode = "BI";
-                        break;
-                    case 9: //太平
-                        OfficeCode = "BJ";
-                        break;
-                    default: //龍井
-                        OfficeCode = "BK";
-                }
-
-                String Year = edtYear.getText().toString();
-                StringBuilder Num = new StringBuilder(edtNum.getText().toString());
-                while(Num.length() < 6) Num.insert(0, "0");
-                getHttpData(Year, Num.toString() ,OfficeCode);
+            String OfficeCode;
+            switch(spnOffice.getSelectedItemPosition()) {
+                case 0: //中山
+                    OfficeCode = "BA";
+                    break;
+                case 1: //中正
+                    OfficeCode = "BB";
+                    break;
+                case 2: //中興
+                    OfficeCode = "BC";
+                    break;
+                case 3: //豐原
+                    OfficeCode = "BD";
+                    break;
+                case 4: //大甲
+                    OfficeCode = "BE";
+                    break;
+                case 5: //清水
+                    OfficeCode = "BF";
+                    break;
+                case 6: //東勢
+                    OfficeCode = "BG";
+                    break;
+                case 7: //雅潭
+                    OfficeCode = "BH";
+                    break;
+                case 8: //大里
+                    OfficeCode = "BI";
+                    break;
+                case 9: //太平
+                    OfficeCode = "BJ";
+                    break;
+                default: //龍井
+                    OfficeCode = "BK";
             }
+
+            String Year = edtYear.getText().toString();
+            StringBuilder Num = new StringBuilder(edtNum.getText().toString());
+            while(Num.length() < 6) Num.insert(0, "0");
+            getHttpData(Year, Num.toString() ,OfficeCode);
         });
     }
+
+    //permissin處理
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.d("PhotoPicker", "取得權限判斷:" + grantResults);
+//        Log.d("PhotoPicker", "取得權限判斷:" + grantResults);
         if (grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             btnSearch.setEnabled(true);
         }
@@ -202,20 +198,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //response資料結果處理
-    private Handler mHandler = new Handler(Looper.myLooper()){
+    private final Handler mHandler = new Handler(Looper.myLooper()){
         @Override
         public void handleMessage(@NonNull Message msg) {
-            if(msg.what == 100 && !((String) msg.obj).equals("[]")){
+            if(msg.what == 100 && !msg.obj.equals("[]")){
+                //response(json)轉為java bean
                 String data = ((String) msg.obj);
                 CaseInfo caseTest = new Gson().fromJson(data.substring(1,data.length()-1),CaseInfo.class);
-                progressBar.setVisibility(View.GONE);
-                btnSearch.setEnabled(true);
+
                 Intent intent = new Intent(MainActivity.this, UploadActivity.class);
                 intent.putExtra("caseName",caseTest.getMM0123());
                 intent.putExtra("caseReason",caseTest.getMM06());
                 intent.putExtra("caseLocation",caseTest.getMM08());
                 intent.putExtra("caseLand",caseTest.getMM09());
                 intent.putExtra("caseSurvey",caseTest.getMD04());
+
+                //關閉進度條、跳轉頁面
+                progressBar.setVisibility(View.GONE);
+                btnSearch.setEnabled(true);
                 startActivity(intent);
             }
             else
