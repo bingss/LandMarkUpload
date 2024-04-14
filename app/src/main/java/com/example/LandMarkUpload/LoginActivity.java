@@ -204,11 +204,13 @@ public class LoginActivity extends AppCompatActivity {
                     }
                     editor.putString("LoginOffice",userNow.getOffice().substring(0,2));
                     editor.apply();
-
+                    btnLogin.setEnabled(true);
+                    progressBar.setVisibility(View.GONE);
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     Toast toast = Toast.makeText( LoginActivity.this, userNow.getName()+"，登入成功!", Toast.LENGTH_SHORT);
                     toast.show();
+
                 }
             }
             else
