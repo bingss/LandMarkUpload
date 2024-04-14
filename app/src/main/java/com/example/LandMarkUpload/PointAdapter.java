@@ -34,8 +34,12 @@ class PointAdapter extends RecyclerView.Adapter<PointAdapter.MyHolder> implement
         notifyDataSetChanged();
     }
 
-    public void editPointNum(int Num,int position){
-        mPointList.get(position).setNum(Num);
+    public void editPointNum(int num,int position){
+        if(mPointList.stream().filter(x -> x.getNum()== num).findFirst().orElse(null) != null){
+            Toast.makeText( mContext, "編輯失敗，已有相同界址點號", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mPointList.get(position).setNum(num);
         mPointList.sort((p1,p2) -> p1.getNum().compareTo(p2.getNum()));
         notifyDataSetChanged();
     }

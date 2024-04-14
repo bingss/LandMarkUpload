@@ -180,11 +180,10 @@ public class UploadActivity extends AppCompatActivity {
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        // There are no request codes
                         Intent data = result.getData();
                         int position = data.getIntExtra("position",-1);
-                        PointInfo PointReturn= (PointInfo)data.getSerializableExtra("PointInfo");
-                        mPointAdapter.editPointNum(PointReturn.getNum(),position);
+                        PointInfo NumReturn= (PointInfo)data.getSerializableExtra("PointInfo");
+                        mPointAdapter.editPointNum(NumReturn.getNum(),position);
                     }
                     else {Log.d("PointActivity返回","----未取得資料");}
                 }
