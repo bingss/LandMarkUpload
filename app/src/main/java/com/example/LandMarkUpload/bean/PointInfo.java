@@ -1,8 +1,9 @@
 package com.example.LandMarkUpload.bean;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class PointInfo {
+public class PointInfo implements Serializable {
     private Integer Num;
     private List<String> imgPath;
 

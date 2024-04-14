@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
 
@@ -43,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText edtYear,edtNum;
     private ProgressBar progressBar;
     private Spinner spnOffice;
-
+    enum OfficeEnum
+    { 中山, 中正, 中興,豐原,大甲,清水,東勢,雅潭,大里,太平,龍井 }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+        //取得權限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { //sdk 33以上
             if (checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -68,25 +71,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
-//            if (!Environment.isExternalStorageManager()){
-//                Toast toast = Toast.makeText( MainActivity.this, "請開啟存取檔案權限", Toast.LENGTH_SHORT);
-//                toast.show();
-//                startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
-//            }
-//        }
-
         btnSearch = findViewById(R.id.btnSearch);
         edtYear = findViewById(R.id.edtYear);
         edtNum = findViewById(R.id.edtNum);
         progressBar = findViewById(R.id.progressBar);
+        TextView textOffice = findViewById(R.id.textOffice);
 
         //設定初始年度
         edtYear.setText( String.valueOf(Calendar.getInstance().get(Calendar.YEAR)-1911) );
 
-        //地所選單
-        spnOffice = findViewById(R.id.spnOffice);
+        //判斷為地政局or地所，地所選單For地政局
         SharedPreferences sharedPreferences = getSharedPreferences("Data", Context.MODE_PRIVATE);
+        spnOffice = findViewById(R.id.spnOffice);
         String curOffice = sharedPreferences.getString("Office","10");
         ArrayAdapter<CharSequence> adapter;
         adapter = ArrayAdapter.createFromResource(this,
@@ -95,6 +91,17 @@ public class MainActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spnOffice.setAdapter(adapter);
         spnOffice.setSelection( Integer.parseInt(curOffice) );
+
+        if(sharedPreferences.getString("LoginOffice","").equals("地政")){
+            textOffice.setVisibility(View.GONE);
+            spnOffice.setVisibility(View.VISIBLE);
+        }
+        else{
+            textOffice.setVisibility(View.VISIBLE);
+            spnOffice.setVisibility(View.GONE);
+            spnOffice.setSelection( OfficeEnum.valueOf( sharedPreferences.getString("LoginOffice","中山") ).ordinal());
+            textOffice.setText(sharedPreferences.getString("LoginOffice","中山"));
+        }
 
         btnSearch.setOnClickListener( v -> {
             progressBar.setVisibility(v.VISIBLE);

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".UploadActivity"
+    android:background="#DFDFDF"
+    android:orientation="vertical">
+
+    <LinearLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:paddingTop="3dp"
+            android:paddingLeft="5dp">
+
+            <TextView
+                android:id="@+id/textName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="-------"
+                android:textColor="@color/black"
+                android:textSize="20sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingLeft="20dp"
+            android:paddingRight="30dp">
+
+                <TextView
+                    android:id="@+id/textView4"
+                    android:layout_width="110dp"
+                    android:layout_height="wrap_content"
+                    android:text="修正點號："
+                    android:textColor="@color/black"
+                    android:textSize="20sp" />
+
+            <EditText
+                    android:id="@+id/edtNum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:inputType="number"/>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|right"
+            android:layout_marginBottom="10dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnCancel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_normal_selector"
+                android:text="取消編輯"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/btnRevise"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/btn_normal_selector"
+                android:text="確認修改"
+                android:textColor="@color/white" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnAdd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:background="@drawable/edit_for_new_point"
+            android:paddingLeft="100dp"
+            android:drawablePadding="-100dp"
+            android:gravity="center"
+            android:drawableLeft="@android:drawable/ic_menu_add"
+            android:text="新增圖片(等下次更新)"
+            android:textColor="#2962FF" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/listImgRv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/recycle_item" />
+
+    </LinearLayout>
+</LinearLayout>

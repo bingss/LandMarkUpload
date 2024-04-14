@@ -19,15 +19,29 @@
             android:id="@+id/textView8"
             android:layout_width="140dp"
             android:layout_height="80dp"
+            android:layout_marginLeft="5dp"
             android:gravity="center_vertical|left"
             android:text="地所："
+            android:textColor="@color/black"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/textOffice"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginLeft="5dp"
+            android:textColor="@color/black"
+            android:gravity="center_vertical|left"
+            android:text="(地所)"
             android:textSize="20sp" />
 
         <Spinner
             android:id="@+id/spnOffice"
             android:layout_width="wrap_content"
             android:layout_height="80dp"
-            android:textSize="34sp" />
+            android:textSize="34sp"
+            android:visibility="gone"/>
+
     </LinearLayout>
 
     <LinearLayout
@@ -40,6 +54,8 @@
             android:layout_width="140dp"
             android:layout_height="80dp"
             android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginLeft="5dp"
             android:text="案件年度：" />
 
         <EditText
@@ -50,6 +66,7 @@
             android:inputType="text"
             android:textSize="20sp"
             android:text="113"
+            android:textColor="@color/black"
             android:autofillHints=""
             tools:ignore="LabelFor" />
 
@@ -64,6 +81,8 @@
             android:id="@+id/textView2"
             android:layout_width="140dp"
             android:layout_height="80dp"
+            android:textColor="@color/black"
+            android:layout_marginLeft="5dp"
             android:textSize="20sp"
             android:text="案號：" />
 
@@ -72,6 +91,7 @@
             android:layout_width="wrap_content"
             android:layout_height="80dp"
             android:ems="20"
+            android:textColor="@color/black"
             android:hint="結尾00數字(如:123400)"
             android:inputType="text"
             android:textSize="20sp" />
@@ -91,7 +111,7 @@
         style="?android:attr/progressBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="invisible" />
+        android:visibility="gone" />
 
 
 </LinearLayout>
