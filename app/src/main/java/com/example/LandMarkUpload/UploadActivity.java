@@ -3,15 +3,20 @@ package com.example.LandMarkUpload;
 import static com.example.LandMarkUpload.utils.FileHelper.getRealPathFromURI;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,11 +46,15 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -53,6 +62,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
+import id.zelory.compressor.Compressor;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Interceptor;
@@ -73,6 +83,7 @@ public class UploadActivity extends AppCompatActivity {
     private RecyclerView listRv;
     private PointAdapter mPointAdapter;
     private TextView textName,textReason,textLocation,textLand,textSurvey;
+    private CheckBox chkExport;
 
 
 
@@ -86,7 +97,8 @@ public class UploadActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        
+
+
         //案件資訊&上傳API
         textName = findViewById(R.id.textName);
         textReason = findViewById(R.id.textReason);
@@ -102,6 +114,7 @@ public class UploadActivity extends AppCompatActivity {
         uploadApi = "https://lohas.taichung.gov.tw/SurveyFile/Upload.aspx?folder=AllFile/"+textLocation.getText()
                 +"&keyword="+textName.getText()+"_"+textLocation.getText()+textLand.getText()
                 +"&fname="+textName.getText()+"_"+textLocation.getText()+textLand.getText();
+        chkExport = findViewById(R.id.chkExport);
         textProgress = findViewById(R.id.textProgress);
         progressBar = findViewById(R.id.progressBar);
         btnUpload = findViewById(R.id.btnUpload);
@@ -116,8 +129,11 @@ public class UploadActivity extends AppCompatActivity {
                 ImageTask task=new ImageTask();
                 task.execute( this.getFilesDir().getPath() );
 
+                btnAdd.setEnabled(false);
+                listRv.setVisibility(View.GONE);
                 btnUpload.setVisibility(View.GONE);
                 btnBack.setVisibility(View.GONE);
+                chkExport.setVisibility(View.GONE);
                 textProgress.setVisibility(View.VISIBLE);
                 textProgress.setText("檔案處理中...");
                 progressBar.setVisibility(View.VISIBLE);
@@ -126,9 +142,12 @@ public class UploadActivity extends AppCompatActivity {
                 Toast toast = Toast.makeText( UploadActivity.this, "請新增至少1個界址點", Toast.LENGTH_SHORT);
                 toast.show();
             }
-
         });
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> {
+            finish();
+//            Intent selectFolderIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+//            selectFolder.launch(selectFolderIntent);
+        });
 
         //初始化控件RecycleView
         listRv = findViewById(R.id.listRv);
@@ -137,57 +156,77 @@ public class UploadActivity extends AppCompatActivity {
         //綁定Adapter
         listRv.setAdapter(mPointAdapter);
 
-//        pointEdit = registerForActivityResult(
-//                new ActivityResultContracts.StartActivityForResult(),new ActivityResultCallback<ActivityResult>() {
-//                    @Override
-//                    public void onActivityResult(ActivityResult result) {
-//                        if (result.getResultCode() == Activity.RESULT_OK) {
-//                            // There are no request codes
-//                            Intent data = result.getData();
-//                            Log.d("PointActivity返回","----成功");
-//
-//                        }
-//                        else Log.d("PointActivity返回","----未取得資料");
-//                    }
-//                });
-
         //RecycleList中button點擊事件
+        View customDialogView = getLayoutInflater().inflate(R.layout.point_edit_dialog, null);
+        EditText edtNum = customDialogView.findViewById(R.id.edtNum);
+        TextView textPosition = customDialogView.findViewById(R.id.textPosition);
+        AlertDialog alertDialog = new AlertDialog.Builder(this)
+                .setView(customDialogView)
+                .setPositiveButton("儲存", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if(!edtNum.getText().toString().isEmpty()){
+                            mPointAdapter.editPointNum(Integer.parseInt(edtNum.getText().toString()), Integer.parseInt(textPosition.getText().toString()) );
+                        }
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .create();
         mPointAdapter.setOnItemClickListener(new PointAdapter.OnItemClickListener() {
             @Override
             public void OnItemClick(View v, PointAdapter.ViewName viewName, int position) {
                 //點號編輯
                 if(R.id.btnEdit == v.getId()){
-                    Intent intent = new Intent(UploadActivity.this, PointEditActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString("CaseName",textName.getText().toString());
-                    bundle.putInt("position",position);
-                    bundle.putSerializable("PointInfo",mPointAdapter.getPoint(position));
-                    intent.putExtras(bundle);
-                    pointEdit.launch(intent);
+                    edtNum.setText( mPointAdapter.getPoint(position).getNum().toString() );
+                    textPosition.setText( String.valueOf(position) );
+                    alertDialog.show();
+//                    Intent PointEditIntent = new Intent(UploadActivity.this, PointEditActivity.class);
+//                    Bundle bundle = new Bundle();
+//                    bundle.putString("CaseName",textName.getText().toString());
+//                    bundle.putInt("position",position);
+//                    bundle.putSerializable("PointInfo",mPointAdapter.getPoint(position));
+//                    intent.putExtras(bundle);
+//                    pointEdit.launch(PointEditIntent);
                 }
                 //刪除點號
                 if(R.id.btnDel == v.getId()){
                     mPointAdapter.removePoint(position);
                 }
             }
-
         });
     }
 
     //編輯頁面返回
-    private final ActivityResultLauncher<Intent> pointEdit = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        int position = data.getIntExtra("position",-1);
-                        PointInfo NumReturn= (PointInfo)data.getSerializableExtra("PointInfo");
-                        mPointAdapter.editPointNum(NumReturn.getNum(),position);
-                    }
-                    else {Log.d("PointActivity返回","----未取得資料");}
-                }
-            });;
+//    private final ActivityResultLauncher<Intent> pointEdit = registerForActivityResult(
+//            new ActivityResultContracts.StartActivityForResult(),new ActivityResultCallback<ActivityResult>() {
+//                @Override
+//                public void onActivityResult(ActivityResult result) {
+//                    if (result.getResultCode() == Activity.RESULT_OK) {
+//                        Intent data = result.getData();
+//                        int position = data.getIntExtra("position",-1);
+//                        PointInfo NumReturn= (PointInfo)data.getSerializableExtra("PointInfo");
+//                        mPointAdapter.editPointNum(NumReturn.getNum(),position);
+//                    }
+//                    else {Log.d("PointActivity返回","----未取得資料");}
+//                }
+//            });;
+    //選擇資料夾
+//    private final ActivityResultLauncher<Intent> selectFolder = registerForActivityResult(
+//            new ActivityResultContracts.StartActivityForResult(),new ActivityResultCallback<ActivityResult>() {
+//                @Override
+//                public void onActivityResult(ActivityResult result) {
+//                    if (result.getResultCode() == Activity.RESULT_OK) {
+//                        Intent data = result.getData();
+//                        Uri folderUri = data.getData();
+//                        Uri docUri = DocumentsContract.buildDocumentUriUsingTree(folderUri,
+//                                DocumentsContract.getTreeDocumentId(folderUri));
+//                        String dstPath = getRealPathFromURI(UploadActivity.this, docUri);
+//                        Log.d("檔案路徑","dstPath:"+ dstPath);
+//                    }
+//                    else {Log.d("Folder返回","----未取得資料");}
+//                }
+//            });
+
     private final ActivityResultLauncher<String> selectPhotos =
             registerForActivityResult(new ActivityResultContracts.GetMultipleContents() , uris -> {
                 if (uris != null && !uris.isEmpty()) {
@@ -207,11 +246,19 @@ public class UploadActivity extends AppCompatActivity {
     public class ImageTask extends AsyncTask<String,Integer, Void>{
         @Override
         protected Void doInBackground(String... params) {
+
+            //刪除上一次上傳檔案
+            File deleteFile = new File(UploadActivity.this.getFilesDir().getPath());
+            if(deleteFile.isDirectory()){
+                for(File file : Objects.requireNonNull(deleteFile.listFiles())) file.delete();
+            }
+
             String ZipPath =  params[0] + "/LP_1.zip";
+            String pdfPath = params[0] + "/"+textName.getText()+".pdf";
+            File pdfFile = new File(pdfPath);
             try {
                 //PDF產製
                 Document pdfDocument = new Document();
-                String pdfPath = params[0] + "/"+textName.getText()+".pdf";
                 PdfWriter.getInstance(pdfDocument, new FileOutputStream(pdfPath));
                 pdfDocument.open();
                 Font font = new Font( BaseFont.createFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED),12, Font.NORMAL);
@@ -241,23 +288,30 @@ public class UploadActivity extends AppCompatActivity {
 
                     List<String> imgPaths = mPointAdapter.getPoint(PointIdx).getimgPath();
 
-                    for(int imgIdx = 0; imgIdx < mPointAdapter.getPoint(PointIdx).getimgPath().size();imgIdx++){
-                        File compressedFile = new File(params[0] + "/"+PointIdx+"_"+imgIdx+".jpg");
-                        //圖片壓縮
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.inSampleSize = 2;       // 採樣率
-                        // 在將文件以Bitmap形式加載到內存的時候，加入Option參數
-                        Bitmap bitmap = BitmapFactory.decodeFile(imgPaths.get(imgIdx), options);
-                        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream( compressedFile ));
-                        bitmap.compress(Bitmap.CompressFormat.JPEG,100,bos);
-                        bos.close();
+                    for(int imgIdx = 0; imgIdx < imgPaths.size();imgIdx++){
+
+                        //圖片壓縮完畢加入PDF
+                        File OriginalFile = new File(imgPaths.get(imgIdx));
+                        File compressedFile = new Compressor(UploadActivity.this)
+                                .setMaxWidth(640)
+                                .setMaxHeight(480)
+                                .setQuality(75)
+                                .setCompressFormat(Bitmap.CompressFormat.JPEG)
+                                .setDestinationDirectoryPath(params[0])
+                                .compressToFile(OriginalFile);
 
                         //圖片壓縮完畢加入PDF
                         Image image = Image.getInstance(compressedFile.getPath());
-                        // 圖片縮放
-                        float scaler = (pdfDocument.getPageSize().getWidth() / image.getWidth()) * 50;
+                        float scalerDivide;
+                        // 圖片縮放旋轉
+                        if(image.getWidth() > image.getHeight()) {
+                            scalerDivide = image.getHeight();
+                            image.setRotationDegrees(-90);
+                        }
+                        else{ scalerDivide = image.getWidth();}
+                        float scaler = (pdfDocument.getPageSize().getWidth() / scalerDivide) * 40;
                         image.scalePercent(scaler);
-                        image.setRotationDegrees(-90);
+
                         //PDF表格處理
                         cellNum = new PdfPCell(new Phrase( mPointAdapter.getPoint(PointIdx).getNum()+"("+(imgIdx+1)+"/"+imgPaths.size()+")",font));
                         cellNum.setColspan(2);
@@ -272,11 +326,11 @@ public class UploadActivity extends AppCompatActivity {
                     }
                     publishProgress(PointIdx+1);
                 }
+
                 pdfDocument.add(table);
                 pdfDocument.close();
 
                 //PDF加入ZIP檔
-                File pdfFile = new File(pdfPath);
                 FileOutputStream fos = new FileOutputStream(ZipPath);
                 ZipOutputStream zop = new ZipOutputStream(fos);
                 byte[] bytes = new byte[1024*8];
@@ -293,9 +347,30 @@ public class UploadActivity extends AppCompatActivity {
 
             }catch (Exception e) {
                 Log.e("Pdf測試",e.toString());
-                Toast toast = Toast.makeText( UploadActivity.this, "圖片壓縮失敗", Toast.LENGTH_SHORT);
-                toast.show();
-                ZipPath = "0";
+                UploadActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        btnAdd.setEnabled(true);
+                        btnUpload.setVisibility(View.VISIBLE);
+                        btnBack.setVisibility(View.VISIBLE);
+                        chkExport.setVisibility(View.VISIBLE);
+                        textProgress.setVisibility(View.GONE);
+                        progressBar.setVisibility(View.GONE);
+                        listRv.setVisibility(View.VISIBLE);
+                        Toast toast = Toast.makeText( UploadActivity.this, "壓縮失敗!", Toast.LENGTH_SHORT);
+                        toast.show();
+                    }
+                });
+            }
+
+
+            if(chkExport.isChecked()){
+                String dstPath = Environment.getExternalStorageDirectory()+File.separator+"Download" + File.separator;
+                File dst = new File(dstPath);
+                try {
+                    exportFile(pdfFile,dst );
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
             postZipData(ZipPath);
             return null;
@@ -308,16 +383,51 @@ public class UploadActivity extends AppCompatActivity {
         }
 
     }
+    private void exportFile(File src, File dst) throws IOException {
+        //if folder does not exist
+        if (!dst.exists()) {
+            if (!dst.mkdir()) {
+                return;
+            }
+        }
+        File expFile = new File(dst.getPath() + File.separator + textName.getText() + ".pdf");
+        FileChannel inChannel = null;
+        FileChannel outChannel = null;
+        try {
+            inChannel = new FileInputStream(src).getChannel();
+            outChannel = new FileOutputStream(expFile).getChannel();
+            inChannel.transferTo(0, inChannel.size(), outChannel);
+        } catch (IOException e) {
+            Log.e("PDF測試", e.toString());
+        } finally {
+            if (inChannel != null)
+                inChannel.close();
+            if (outChannel != null)
+                outChannel.close();
+        }
+    }
     private void postZipData(String ZipPath) {
-        if(ZipPath.equals("0")) {
-            btnUpload.setVisibility(View.VISIBLE);
-            btnBack.setVisibility(View.VISIBLE);
-            textProgress.setVisibility(View.GONE);
-            progressBar.setVisibility(View.GONE);
+
+        File zipFile = new File( ZipPath );
+        if(zipFile.length() > 30000000) {
+            UploadActivity.this.runOnUiThread(new Runnable() {
+                public void run() {
+                    btnAdd.setEnabled(true);
+                    btnUpload.setVisibility(View.VISIBLE);
+                    btnBack.setVisibility(View.VISIBLE);
+                    chkExport.setVisibility(View.VISIBLE);
+                    textProgress.setVisibility(View.GONE);
+                    progressBar.setVisibility(View.GONE);
+                    listRv.setVisibility(View.VISIBLE);
+                    Toast toast = Toast.makeText( UploadActivity.this, "檔案過大，無法上傳!", Toast.LENGTH_SHORT);
+                    toast.show();
+                }
+            });
             return;
         }
-        File zipFile = new File( ZipPath );
-        File deleteFile = new File(this.getFilesDir().getPath()); //上傳成功則清空此資料夾
+        Log.d("ZIP大小","byte"+zipFile.length());
+
+
         // RequestBody放要傳的參數和值
         RequestBody formBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
@@ -331,8 +441,14 @@ public class UploadActivity extends AppCompatActivity {
                 if (progressBar != null){
                     UploadActivity.this.runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast toast = Toast.makeText( UploadActivity.this, "上傳成功", Toast.LENGTH_SHORT);
-                            toast.show();
+                            if (chkExport.isChecked()){
+                                Toast toast = Toast.makeText( UploadActivity.this, "上傳成功,檔案輸出:" +
+                                        "Download/" + textName.getText() + ".pdf", Toast.LENGTH_SHORT);
+                                toast.show();
+                            }else{
+                                Toast toast = Toast.makeText( UploadActivity.this, "上傳成功", Toast.LENGTH_SHORT);
+                                toast.show();
+                            }
                             finish();
                         }
                     });
@@ -383,10 +499,8 @@ public class UploadActivity extends AppCompatActivity {
         call.enqueue(new Callback() {
             @Override
             public void onResponse(Call call, Response response) {
-                // 連線成功，則清空資料夾
-                if(deleteFile.isDirectory()){
-                    for(File file : Objects.requireNonNull(deleteFile.listFiles())) file.delete();
-                }
+                // 連線成功
+
             }
             @Override
             public void onFailure(Call call, IOException e) {

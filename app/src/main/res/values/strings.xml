@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">界址上傳(測試版)</string>
+    <string name="app_name">界址上傳</string>
 
     <string-array name="office">
         <item>中山</item>

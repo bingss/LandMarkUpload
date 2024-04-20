@@ -61,7 +61,7 @@
         android:layout_toLeftOf="@+id/btnDel"
         android:background="#FA4F00"
         android:textColor="@color/white"
-        android:text="點號\n編輯"
+        android:text="編輯"
         android:textSize="16sp"/>
 
     <Button
@@ -71,7 +71,7 @@
         android:layout_alignParentRight="true"
         android:background="#C62828"
         android:textColor="@color/white"
-        android:text="點號\n刪除"
+        android:text="刪除"
         android:textSize="16sp"/>
 
 

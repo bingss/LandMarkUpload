@@ -13,8 +13,8 @@ android {
         applicationId = "com.example.LandMarkUpload"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -55,4 +55,5 @@ dependencies {
     implementation ("com.itextpdf:itextg:5.5.10")
     implementation("com.itextpdf:itext-asian:5.2.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation ("id.zelory:compressor:2.1.1")
 }
