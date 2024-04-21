@@ -104,6 +104,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         btnSearch.setOnClickListener( v -> {
+            if (edtYear.getText().toString().isEmpty() || edtNum.getText().toString().isEmpty())
+            {
+                Toast toast = Toast.makeText( this, "年度或案號不可為空", Toast.LENGTH_SHORT);
+                toast.show();
+                return;
+            }
             progressBar.setVisibility(v.VISIBLE);
             btnSearch.setEnabled(false);
 

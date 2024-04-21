@@ -9,29 +9,26 @@
     android:background="#DFDFDF"
     android:orientation="vertical">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="@style/ToolbarTheme"
+        app:titleTextAppearance="@style/TitleTextSize"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navigationIcon="?attr/actionModeCloseDrawable"
+        app:title="113BK56022400" />
+
     <LinearLayout
 
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingTop="5dp"
         android:layout_weight="1"
         android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center"
-            android:paddingTop="3dp"
-            android:paddingLeft="5dp">
-
-            <TextView
-                android:id="@+id/textName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="113BK56022400"
-                android:textColor="@color/black"
-                android:textSize="20sp" />
-        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -204,7 +201,6 @@
         android:orientation="vertical">
 
 
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -213,20 +209,10 @@
             android:orientation="horizontal">
             <CheckBox
                 android:id="@+id/chkExport"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:checked="false"
-                android:text="上傳後PDF檔\n輸出手機" />
-            <Button
-                android:id="@+id/btnBack"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/btn_normal_selector"
-                android:text="返回"
-                android:textColor="@color/white" />
+                android:text="PDF檔一併\n輸出至手機" />
 
             <Button
                 android:id="@+id/btnUpload"
@@ -235,8 +221,7 @@
                 android:layout_margin="4dp"
                 android:background="@drawable/btn_normal_selector"
                 android:textColor="@color/white"
-                android:layout_weight="1"
-                android:text="開始上傳" />
+                android:text="上傳" />
         </LinearLayout>
 
     </LinearLayout>

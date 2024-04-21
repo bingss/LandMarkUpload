@@ -2,7 +2,6 @@ package com.example.LandMarkUpload;
 
 import static com.example.LandMarkUpload.utils.FileHelper.getRealPathFromURI;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,7 +10,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -22,12 +20,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -48,13 +45,9 @@ import com.itextpdf.text.pdf.PdfWriter;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -76,16 +69,15 @@ import okhttp3.Response;
 
 public class UploadActivity extends AppCompatActivity {
 
-    private Button btnBack,btnUpload,btnAdd;
+    private Button btnUpload,btnAdd;
     private String uploadApi;
     private ProgressBar progressBar;
     private TextView textProgress;
     private RecyclerView listRv;
     private PointAdapter mPointAdapter;
-    private TextView textName,textReason,textLocation,textLand,textSurvey;
+    private TextView textReason,textLocation,textLand,textSurvey;
     private CheckBox chkExport;
-
-
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,25 +92,24 @@ public class UploadActivity extends AppCompatActivity {
 
 
         //案件資訊&上傳API
-        textName = findViewById(R.id.textName);
+        toolbar = findViewById(R.id.toolbar);
         textReason = findViewById(R.id.textReason);
         textLocation = findViewById(R.id.textLocation);
         textLand = findViewById(R.id.textLand);
         textSurvey = findViewById(R.id.textSurvey);
         Intent intent = getIntent();
-        textName.setText( intent.getStringExtra("caseName") );
+//        toolbar.setTitle( intent.getStringExtra("caseName") );
         textReason.setText( intent.getStringExtra("caseReason") );
         textLocation.setText( intent.getStringExtra("caseLocation") );
         textLand.setText( intent.getStringExtra("caseLand") );
         textSurvey.setText( intent.getStringExtra("caseSurvey") );
         uploadApi = "https://lohas.taichung.gov.tw/SurveyFile/Upload.aspx?folder=AllFile/"+textLocation.getText()
-                +"&keyword="+textName.getText()+"_"+textLocation.getText()+textLand.getText()
-                +"&fname="+textName.getText()+"_"+textLocation.getText()+textLand.getText();
+                +"&keyword="+toolbar.getTitle()+"_"+textLocation.getText()+textLand.getText()
+                +"&fname="+toolbar.getTitle()+"_"+textLocation.getText()+textLand.getText();
         chkExport = findViewById(R.id.chkExport);
         textProgress = findViewById(R.id.textProgress);
         progressBar = findViewById(R.id.progressBar);
         btnUpload = findViewById(R.id.btnUpload);
-        btnBack = findViewById(R.id.btnBack);
         btnAdd = findViewById(R.id.btnAdd);
         btnAdd.setOnClickListener(v -> {
             selectPhotos.launch("image/*");
@@ -132,7 +123,6 @@ public class UploadActivity extends AppCompatActivity {
                 btnAdd.setEnabled(false);
                 listRv.setVisibility(View.GONE);
                 btnUpload.setVisibility(View.GONE);
-                btnBack.setVisibility(View.GONE);
                 chkExport.setVisibility(View.GONE);
                 textProgress.setVisibility(View.VISIBLE);
                 textProgress.setText("檔案處理中...");
@@ -143,11 +133,16 @@ public class UploadActivity extends AppCompatActivity {
                 toast.show();
             }
         });
-        btnBack.setOnClickListener(v -> {
-            finish();
+        toolbar.setNavigationOnClickListener(v->{
+            if(progressBar.getVisibility() == View.GONE){
+                finish();
+            }
+        });
+//        btnBack.setOnClickListener(v -> {
+//            finish();
 //            Intent selectFolderIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 //            selectFolder.launch(selectFolderIntent);
-        });
+//        });
 
         //初始化控件RecycleView
         listRv = findViewById(R.id.listRv);
@@ -254,7 +249,7 @@ public class UploadActivity extends AppCompatActivity {
             }
 
             String ZipPath =  params[0] + "/LP_1.zip";
-            String pdfPath = params[0] + "/"+textName.getText()+".pdf";
+            String pdfPath = params[0] + "/"+toolbar.getTitle()+".pdf";
             File pdfFile = new File(pdfPath);
             try {
                 //PDF產製
@@ -266,7 +261,7 @@ public class UploadActivity extends AppCompatActivity {
                 //PDF表格初始化-標題表格
                 PdfPTable tableTitle = new PdfPTable(1);
                 tableTitle.setWidthPercentage(100);
-                PdfPCell cellTitle = new PdfPCell(new Phrase("案號:"+textName.getText(),font));
+                PdfPCell cellTitle = new PdfPCell(new Phrase("案號:"+toolbar.getTitle(),font));
                 cellTitle.setHorizontalAlignment(Element.ALIGN_CENTER);
                 tableTitle.addCell(cellTitle);
                 pdfDocument.add(tableTitle);
@@ -324,7 +319,7 @@ public class UploadActivity extends AppCompatActivity {
                         cellImg.setHorizontalAlignment(Element.ALIGN_CENTER);
                         table.addCell(cellImg);
                     }
-                    publishProgress(PointIdx+1);
+                    publishProgress(PointIdx);
                 }
 
                 pdfDocument.add(table);
@@ -344,6 +339,7 @@ public class UploadActivity extends AppCompatActivity {
                 bufferedInputStream.close();
                 zop.close();
                 fos.close();
+                publishProgress(mPointAdapter.getItemCount());
 
             }catch (Exception e) {
                 Log.e("Pdf測試",e.toString());
@@ -351,7 +347,6 @@ public class UploadActivity extends AppCompatActivity {
                     public void run() {
                         btnAdd.setEnabled(true);
                         btnUpload.setVisibility(View.VISIBLE);
-                        btnBack.setVisibility(View.VISIBLE);
                         chkExport.setVisibility(View.VISIBLE);
                         textProgress.setVisibility(View.GONE);
                         progressBar.setVisibility(View.GONE);
@@ -377,9 +372,17 @@ public class UploadActivity extends AppCompatActivity {
         }
 
         protected void onProgressUpdate(Integer... values) {
-            final int progress = (int) (((double) values[0]/mPointAdapter.getItemCount()) * 100);
-            textProgress.setText(String.format("檔案處理中%d%%", progress));
-            progressBar.setProgress(progress);
+            if(values[0] == mPointAdapter.getItemCount())
+            {
+                textProgress.setText("開始上傳0%");
+                progressBar.setProgress(0);
+            }
+            else
+            {
+                final int progress = (int) (((double) values[0]/mPointAdapter.getItemCount()) * 100);
+                textProgress.setText(String.format("檔案處理中%d%%", progress));
+                progressBar.setProgress(progress);
+            }
         }
 
     }
@@ -390,7 +393,7 @@ public class UploadActivity extends AppCompatActivity {
                 return;
             }
         }
-        File expFile = new File(dst.getPath() + File.separator + textName.getText() + ".pdf");
+        File expFile = new File(dst.getPath() + File.separator + toolbar.getTitle() + ".pdf");
         FileChannel inChannel = null;
         FileChannel outChannel = null;
         try {
@@ -414,11 +417,10 @@ public class UploadActivity extends AppCompatActivity {
                 public void run() {
                     btnAdd.setEnabled(true);
                     btnUpload.setVisibility(View.VISIBLE);
-                    btnBack.setVisibility(View.VISIBLE);
                     chkExport.setVisibility(View.VISIBLE);
+                    listRv.setVisibility(View.VISIBLE);
                     textProgress.setVisibility(View.GONE);
                     progressBar.setVisibility(View.GONE);
-                    listRv.setVisibility(View.VISIBLE);
                     Toast toast = Toast.makeText( UploadActivity.this, "檔案過大，無法上傳!", Toast.LENGTH_SHORT);
                     toast.show();
                 }
@@ -443,7 +445,7 @@ public class UploadActivity extends AppCompatActivity {
                         public void run() {
                             if (chkExport.isChecked()){
                                 Toast toast = Toast.makeText( UploadActivity.this, "上傳成功,檔案輸出:" +
-                                        "Download/" + textName.getText() + ".pdf", Toast.LENGTH_SHORT);
+                                        "Download/" + toolbar.getTitle() + ".pdf", Toast.LENGTH_SHORT);
                                 toast.show();
                             }else{
                                 Toast toast = Toast.makeText( UploadActivity.this, "上傳成功", Toast.LENGTH_SHORT);

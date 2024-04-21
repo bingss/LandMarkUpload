@@ -63,7 +63,7 @@
             android:layout_width="wrap_content"
             android:layout_height="80dp"
             android:ems="10"
-            android:inputType="text"
+            android:inputType="number"
             android:textSize="20sp"
             android:text="113"
             android:textColor="@color/black"
@@ -93,7 +93,7 @@
             android:ems="20"
             android:textColor="@color/black"
             android:hint="結尾00數字(如:123400)"
-            android:inputType="text"
+            android:inputType="number"
             android:textSize="20sp" />
     </LinearLayout>
 

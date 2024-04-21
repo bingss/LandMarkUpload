@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--Toolbar與Menu顏色與大小-->
+    <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="titleTextColor">@color/white</item>
+        <!--更改Toolbar所有文字的大小-->
+        <item name="android:textSize">20dp</item>
+        <!--更改Toolbar背景顏色-->
+        <item name="android:background">@color/black</item>
+    </style>
+    <!--Title大小-->
+    <style name="TitleTextSize" parent="@style/Base.TextAppearance.AppCompat.Title">
+        <item name="android:textSize">20sp</item>
+    </style>
+</resources>
