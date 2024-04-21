@@ -56,4 +56,5 @@ dependencies {
     implementation("com.itextpdf:itext-asian:5.2.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation ("id.zelory:compressor:2.1.1")
+    implementation ("androidx.security:security-crypto:1.1.0-alpha06")
 }

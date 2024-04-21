@@ -23,10 +23,12 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.LandMarkUpload.bean.UserInfo;
+import com.example.LandMarkUpload.utils.EncryptedSharedHelper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -46,6 +48,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnLogin;
     private CheckBox chkLogin;
     private ProgressBar progressBar;
+    private EncryptedSharedHelper encryptedShared;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,14 +66,19 @@ public class LoginActivity extends AppCompatActivity {
         CheckBox chkLogin = findViewById(R.id.chkLogin);
         btnLogin = findViewById(R.id.btnLogin);
         progressBar = findViewById(R.id.progressBar);
-
+        try {
+            encryptedShared = new EncryptedSharedHelper(this,"Encrypted_Data");
+        } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException(e);
+        }
         //取得前次有無記住帳密
         SharedPreferences sharedPreferences =getSharedPreferences("Data",MODE_PRIVATE);
         if( sharedPreferences.getBoolean("remember",false) ){
-            edtUsrName.setText(sharedPreferences.getString("Account",""));
-            edtPassword.setText(sharedPreferences.getString("Password",""));
+            edtUsrName.setText(encryptedShared.getString("Account"));
+            edtPassword.setText(encryptedShared.getString("Password"));
             chkLogin.setChecked(true);
         }
+
 
         btnLogin.setOnClickListener(v->{
             HttpLogin(edtUsrName.getText().toString(), edtPassword.getText().toString());
@@ -193,17 +201,19 @@ public class LoginActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     //勾選記住則存帳密
                     if(chkLogin.isChecked()){
-                        editor.putString("Account",userNow.getAccount());
-                        editor.putString("Password",userNow.getPassword());
+                        encryptedShared.putString("Account",userNow.getAccount());
+                        encryptedShared.putString("Password",userNow.getPassword());
                         editor.putBoolean("remember",true);
                     }
                     else{
-                        editor.remove("Account");
-                        editor.remove("Password");
+                        encryptedShared.remove("Account");
+                        encryptedShared.remove("Password");
                         editor.putBoolean("remember",false);
                     }
                     editor.putString("LoginOffice",userNow.getOffice().substring(0,2));
                     editor.apply();
+                    encryptedShared.apply();
+
                     btnLogin.setEnabled(true);
                     progressBar.setVisibility(View.GONE);
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
