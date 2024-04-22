@@ -98,7 +98,7 @@ public class UploadActivity extends AppCompatActivity {
         textLand = findViewById(R.id.textLand);
         textSurvey = findViewById(R.id.textSurvey);
         Intent intent = getIntent();
-//        toolbar.setTitle( intent.getStringExtra("caseName") );
+        toolbar.setTitle( intent.getStringExtra("caseName") );
         textReason.setText( intent.getStringExtra("caseReason") );
         textLocation.setText( intent.getStringExtra("caseLocation") );
         textLand.setText( intent.getStringExtra("caseLand") );
